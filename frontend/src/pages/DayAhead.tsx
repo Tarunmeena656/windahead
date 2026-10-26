@@ -65,7 +65,16 @@ export default function DayAhead({ meta, date, cutoff, onDateChange }: Props) {
               hint={`${view.data.forecastLabel}, published ${dateTime(view.data.forecastPublishedAt)}`}
               tone="accent"
             />
-            <Kpi label="Actual wind" value={gwh(view.data.summary.totalActualMwh)} hint="Elexon FUELHH, metered" tone="actual" />
+            <Kpi
+              label="Actual wind"
+              value={gwh(view.data.summary.totalActualMwh)}
+              hint={
+                view.data.summary.hours < 24
+                  ? `${view.data.summary.hours} of 24 hours metered so far, totals compare those hours only`
+                  : 'Elexon FUELHH, metered'
+              }
+              tone="actual"
+            />
             <Kpi
               label="Forecast minus actual"
               value={signed(view.data.summary.bias, ' MW')}
@@ -88,7 +97,7 @@ export default function DayAhead({ meta, date, cutoff, onDateChange }: Props) {
           <div className="grid-main">
             <Card
               title="Forecast at cutoff vs actual generation"
-              subtitle="Hourly MW. The shaded band is where the actual landed in 80% of January hours, given the forecast."
+              subtitle="Hourly MW. The shaded band is where the actual landed in 80% of hours in this period, given the forecast."
             >
               <DayChart
                 points={view.data.points}
@@ -98,14 +107,14 @@ export default function DayAhead({ meta, date, cutoff, onDateChange }: Props) {
               <p className="legend-note">Tick a publication in the table below to overlay how the forecast changed.</p>
             </Card>
 
-            <Card title="What to buy against" subtitle="Using this January's error statistics for the chosen cutoff">
+            <Card title="What to buy against" subtitle="Using this period's error statistics for the chosen cutoff">
               <div className="guidance">
                 <div className="row">
                   <span className="k">Forecast for the day</span>
                   <span className="v">{gwh(view.data.summary.totalForecastMwh)}</span>
                 </div>
                 <div className="row">
-                  <span className="k">Average forecast bias this month</span>
+                  <span className="k">Average forecast bias in this period</span>
                   <span className="v">{signed(view.data.guidance.monthBias)} / h</span>
                 </div>
                 <div className="row">

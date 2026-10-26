@@ -2,7 +2,7 @@ import { api } from '../api';
 import { DailyChart, Histogram, HourOfDayChart, ScatterPlot, SlotChart } from '../components/AccuracyCharts';
 import DailyTable from '../components/DailyTable';
 import { Card, Kpi } from '../components/Kpi';
-import { gw, mw, pct, signed } from '../format';
+import { dateShort, gw, mw, pct, signed } from '../format';
 import { useFetch } from '../useFetch';
 
 type Props = {
@@ -25,10 +25,12 @@ export default function Accuracy({ cutoff, onOpenDay }: Props) {
     <>
       <div className="page-head">
         <div>
-          <h1>How good was the day-ahead wind forecast in January 2026?</h1>
+          <h1>How good was the day-ahead wind forecast?</h1>
           <p className="sub">
-            {a.days} delivery days, {m.hours} hours. Each day uses the forecast the desk would have had at {cutoff} on
-            D-1 ({usedLabel}). Error is forecast minus actual, so positive means wind came in below forecast.
+            {a.days} delivery days
+            {a.daily.length > 0 && ` from ${dateShort(a.daily[0].date)} to ${dateShort(a.daily[a.daily.length - 1].date)}`},{' '}
+            {m.hours} hours. Each day uses the forecast the desk would have had at {cutoff} on D-1 ({usedLabel}). Error is
+            forecast minus actual, so positive means wind came in below forecast.
           </p>
         </div>
       </div>

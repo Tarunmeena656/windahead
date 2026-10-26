@@ -105,10 +105,12 @@ def hour_points(store: Store, day: date, series: dict[datetime, float]) -> list[
 
 
 def summarise(points: list[dict]) -> dict:
-    errors = [p["error"] for p in points if p["error"] is not None]
-    forecasts = [p["forecast"] for p in points if p["forecast"] is not None]
-    actuals = [p["actual"] for p in points if p["actual"] is not None]
-    worst = max((p for p in points if p["error"] is not None), key=lambda p: p["error"], default=None)
+    # only hours that have both values, so a day still in progress compares like for like
+    paired = [p for p in points if p["error"] is not None]
+    errors = [p["error"] for p in paired]
+    forecasts = [p["forecast"] for p in paired]
+    actuals = [p["actual"] for p in paired]
+    worst = max(paired, key=lambda p: p["error"], default=None)
     return {
         "hours": len(errors),
         "meanForecast": r1(mean(forecasts)),
@@ -169,6 +171,8 @@ def day_view(store: Store, day: date, cutoff: time) -> dict:
     overall = accuracy(store, cutoff)
     shortfall_p90 = overall["errorQuantiles"]["p90"]
     bias = overall["metrics"]["bias"]
+    paired = [p for p in points if p["error"] is not None]
+    planned = sum(max(p["forecast"] - shortfall_p90, 0) for p in paired)
     return {
         "date": day.isoformat(),
         "cutoff": cutoff.strftime("%H:%M"),
@@ -183,8 +187,8 @@ def day_view(store: Store, day: date, cutoff: time) -> dict:
             "errorP10": overall["errorQuantiles"]["p10"],
             "shortfallP90": shortfall_p90,
             "shortfallP95": overall["errorQuantiles"]["p95"],
-            "plannedWindMwh": r1(sum(max(p["forecast"] - shortfall_p90, 0) for p in points if p["forecast"] is not None)),
-            "marginMwh": r1(shortfall_p90 * 24),
+            "plannedWindMwh": r1(planned),
+            "marginMwh": r1(sum(p["forecast"] for p in paired) - planned),
         },
     }
 

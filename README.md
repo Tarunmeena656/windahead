@@ -132,12 +132,32 @@ python scripts/fetch_data.py
 This re-downloads the January 2026 window from Elexon (about 70 small requests) and rewrites the three
 files in `data/`. The window is defined in `backend/app/config.py`.
 
+### Other date windows (for example up to today)
+
+The brief fixes the window to January 2026 and that is the default. To test with recent days, download
+another window into its own folder and point the backend at it:
+
+```bash
+cd backend
+python scripts/fetch_data.py --from 2026-09-27 --to 2026-10-26 --out ../data-latest
+DATA_DIR=../data-latest DELIVERY_FROM=2026-09-27 DELIVERY_TO=2026-10-26 uvicorn app.main:app --port 8000
+```
+
+PowerShell: `$env:DATA_DIR='../data-latest'; $env:DELIVERY_FROM='2026-09-27'; $env:DELIVERY_TO='2026-10-26'; uvicorn app.main:app --port 8000`.
+
+The frontend picks the window up from `/api/meta`. Today's delivery day works too: the forecast is the
+one published yesterday, and the actuals fill in as Elexon publishes them (about 30 minutes after each
+half hour), so totals and errors cover the metered hours only until the day is complete. `data-*`
+folders are ignored by git.
+
 ### Environment variables
 
 | Variable       | Default                          | Used for                               |
 | -------------- | -------------------------------- | -------------------------------------- |
 | `PORT`         | 8000 (uvicorn flag)              | backend port                           |
 | `DATA_DIR`     | `<repo>/data`                    | where the snapshot is read from        |
+| `DELIVERY_FROM` | `2026-01-02`                    | first delivery day of the window       |
+| `DELIVERY_TO`  | `2026-02-01`                     | last delivery day of the window        |
 | `STATIC_DIR`   | `<repo>/frontend/dist`           | built frontend served by the backend   |
 | `CORS_ORIGINS` | `http://localhost:5173`          | comma separated list of allowed origins |
 | `VITE_API_URL` | empty (same origin)              | frontend: API base URL                 |

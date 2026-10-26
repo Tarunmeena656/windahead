@@ -1,6 +1,8 @@
+import argparse
 import json
+import os
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -9,19 +11,19 @@ from app import config  # noqa: E402
 from app.elexon import fetch_wind_actuals, fetch_wind_forecasts  # noqa: E402
 
 
-def main() -> None:
-    config.DATA_DIR.mkdir(parents=True, exist_ok=True)
+def main(delivery_from: date, delivery_to: date, data_dir: Path) -> None:
+    data_dir.mkdir(parents=True, exist_ok=True)
 
-    print("fetching actuals (FUELHH, WIND)...")
-    raw_actuals = fetch_wind_actuals(config.DELIVERY_FROM - timedelta(days=1), config.DELIVERY_TO)
+    print(f"fetching actuals (FUELHH, WIND) {delivery_from} .. {delivery_to}...")
+    raw_actuals = fetch_wind_actuals(delivery_from - timedelta(days=1), delivery_to)
     actuals = {}
     for row in raw_actuals:
         actuals[row["startTime"]] = {"startTime": row["startTime"], "generation": row["generation"]}
     actual_rows = sorted(actuals.values(), key=lambda r: r["startTime"])
 
     # from two days before the first delivery day, so the revision history is there too
-    publish_from = datetime.combine(config.DELIVERY_FROM - timedelta(days=2), datetime.min.time(), timezone.utc)
-    publish_to = datetime.combine(config.DELIVERY_TO + timedelta(days=1), datetime.min.time(), timezone.utc)
+    publish_from = datetime.combine(delivery_from - timedelta(days=2), datetime.min.time(), timezone.utc)
+    publish_to = datetime.combine(delivery_to + timedelta(days=1), datetime.min.time(), timezone.utc)
     print(f"fetching forecasts (WINDFOR) published {publish_from:%Y-%m-%d} .. {publish_to:%Y-%m-%d}...")
     raw_forecasts = fetch_wind_forecasts(publish_from, publish_to)
     forecasts = {}
@@ -30,10 +32,12 @@ def main() -> None:
         forecasts[key] = {"publishTime": row["publishTime"], "startTime": row["startTime"], "generation": row["generation"]}
     forecast_rows = sorted(forecasts.values(), key=lambda r: (r["publishTime"], r["startTime"]))
 
-    (config.DATA_DIR / "actuals.json").write_text(json.dumps(actual_rows))
-    (config.DATA_DIR / "forecasts.json").write_text(json.dumps(forecast_rows))
+    (data_dir / "actuals.json").write_text(json.dumps(actual_rows))
+    (data_dir / "forecasts.json").write_text(json.dumps(forecast_rows))
     meta = {
         "fetchedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "deliveryFrom": delivery_from.isoformat(),
+        "deliveryTo": delivery_to.isoformat(),
         "actuals": {"rows": len(actual_rows), "from": actual_rows[0]["startTime"], "to": actual_rows[-1]["startTime"]},
         "forecasts": {
             "rows": len(forecast_rows),
@@ -42,9 +46,14 @@ def main() -> None:
         },
         "source": "Elexon BMRS Insights API, datasets FUELHH (fuelType WIND) and WINDFOR",
     }
-    (config.DATA_DIR / "meta.json").write_text(json.dumps(meta, indent=2))
+    (data_dir / "meta.json").write_text(json.dumps(meta, indent=2))
     print(json.dumps(meta, indent=2))
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="download wind actuals and forecasts from Elexon")
+    parser.add_argument("--from", dest="delivery_from", type=date.fromisoformat, default=config.DELIVERY_FROM)
+    parser.add_argument("--to", dest="delivery_to", type=date.fromisoformat, default=config.DELIVERY_TO)
+    parser.add_argument("--out", type=Path, default=Path(os.environ.get("DATA_DIR", config.DATA_DIR)))
+    args = parser.parse_args()
+    main(args.delivery_from, args.delivery_to, args.out)

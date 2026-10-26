@@ -27,8 +27,9 @@ export default function Method({ meta }: { meta: Meta }) {
               {meta.data.forecasts.publishedFrom.slice(0, 10)} and {meta.data.forecasts.publishedTo.slice(0, 10)}.
             </li>
             <li>
-              Scope: purchase decisions made in January 2026, i.e. delivery days {meta.deliveryFrom} to {meta.deliveryTo}.
-              January is on GMT, so Elexon's UTC timestamps are UK local time.
+              Scope: delivery days {meta.deliveryFrom} to {meta.deliveryTo}, decided one day ahead. The brief's window
+              is January 2026; the backend can be pointed at another window. Times are shown in UTC, which is UK local
+              time in winter and one hour behind during BST.
             </li>
           </ul>
         </div>
@@ -65,7 +66,7 @@ export default function Method({ meta }: { meta: Meta }) {
             </li>
             <li>
               The "likely range" band on the day chart is forecast − P90 error to forecast − P10 error, so it is where the
-              actual landed in 80% of January hours.
+              actual landed in 80% of the hours in the window.
             </li>
             <li>
               "Wind to plan on" is the forecast minus the P90 shortfall, floored at zero, summed over the day. "Extra to

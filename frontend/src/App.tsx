@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { api } from './api';
-import { dateTime } from './format';
+import { dateShort, dateTime } from './format';
 import Accuracy from './pages/Accuracy';
 import DayAhead from './pages/DayAhead';
 import Method from './pages/Method';
@@ -53,7 +53,9 @@ export default function App() {
           <img src="/favicon.svg" alt="" />
           <div>
             <strong>WindAhead</strong>
-            <span>Day-ahead wind desk · GB · January 2026</span>
+            <span>
+              Day-ahead wind desk · GB · {dateShort(m.deliveryFrom)} – {dateShort(m.deliveryTo)}
+            </span>
           </div>
         </div>
         <nav className="tabs">
@@ -90,7 +92,8 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        Source: {m.data.source}. Snapshot taken {dateTime(m.data.fetchedAt)} UTC. All times are UK time (GMT in January).
+        Source: {m.data.source}. Snapshot taken {dateTime(m.data.fetchedAt)} UTC. Times are UTC, which is UK time in
+        winter.
       </footer>
     </div>
   );
