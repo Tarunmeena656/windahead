@@ -1,0 +1,16 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      CORS_ORIGINS: http://localhost:3000
+    ports:
+      - '8000:8000'
+
+  web:
+    build: ./frontend
+    ports:
+      - '3000:80'
+    depends_on:
+      - api

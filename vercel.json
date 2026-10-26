@@ -1,0 +1,9 @@
+{
+  "installCommand": "pip install -r requirements.txt && cd frontend && npm ci",
+  "buildCommand": "cd frontend && npm run build",
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "{backend/app,data,frontend/dist}/**"
+    }
+  }
+}

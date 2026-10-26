@@ -1,0 +1,14 @@
+{
+  "fetchedAt": "2026-10-26T09:12:08Z",
+  "actuals": {
+    "rows": 1536,
+    "from": "2026-01-01T00:00:00Z",
+    "to": "2026-02-01T23:30:00Z"
+  },
+  "forecasts": {
+    "rows": 19272,
+    "publishedFrom": "2025-12-31T02:30:00Z",
+    "publishedTo": "2026-02-01T22:30:00Z"
+  },
+  "source": "Elexon BMRS Insights API, datasets FUELHH (fuelType WIND) and WINDFOR"
+}
